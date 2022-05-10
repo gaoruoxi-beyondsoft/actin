@@ -1,0 +1,58 @@
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Test REST API
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          file=rest-api-response.json
+          auth="Authorization: bearer $GITHUB_TOKEN"
+          url="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY"
+
+          # Delete the output file (if previously created)
+          rm "$file" 1>/dev/null 2>&1 || :
+          
+          # Invoke the REST API
+          code=$(curl --silent --show-error --write-out '%{http_code}' --output "$file" --header "$auth" --request GET "$url")
+          
+          # Dump the response body
+          cat "$file" || :
+          
+          # Check the HTTP code
+          echo "HTTP code $code"
+          if [[ "$code" != '200' ]]; then
+            exit 1
+          fi
+          
+          # Verify the output contains the expected data
+          echo Verify expected output
+          cat "$file" | grep --fixed-strings "\"full_name\": \"$GITHUB_REPOSITORY\""
+      - name: Test GraphQL API
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          file=graphql-api-response.json
+          auth="Authorization: bearer $GITHUB_TOKEN"
+          data='{ "query": "query { viewer { login } }" }'
+
+          # Delete the output file (if previously created)
+          rm "$file" 1>/dev/null 2>&1 || :
+
+          # Invoke the GraphQL API
+          code=$(curl --silent --show-error --write-out '%{http_code}' --output "$file" --header "$auth" --request POST --data "$data" "$GITHUB_GRAPHQL_URL")
+
+          # Dump the response body
+          cat "$file" || :
+          
+          # Check the HTTP code
+          echo "HTTP code $code"
+          if [[ "$code" != '200' ]]; then
+            exit 1
+          fi
+          
+          # Verify the output contains the expected data
+          echo Verify expected output
+          cat "$file" | grep --fixed-strings '"login":"github-actions[bot]"'
