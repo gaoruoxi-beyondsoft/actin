@@ -1,0 +1,14 @@
+name: CI
+on: 
+  push:
+  workflow_dispatch:
+jobs:
+  my-job:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/javascript-action@v1
+        with:
+          milliseconds: 1000
+      - uses: hashicorp/gh-action-check-broken-links@v1.0.1
+        with:
+          baseUrl: https://no-such-domain.com
