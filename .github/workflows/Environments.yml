@@ -1,0 +1,61 @@
+name: Environments
+
+on:
+  workflow_dispatch:
+    inputs:
+      jobToFail:
+        type: choice
+        description: What job should fail
+        required: true
+        default: deploy-production
+        options: 
+        - deploy-test
+        - deploy-staging
+        - deploy-production
+        - none
+
+jobs:
+  deploy-test:
+    runs-on: self-hosted
+    environment:
+      name: env-test
+      url: https://test.github.com
+    steps:
+      - name: Run a one-line script
+        run: echo Hello, world!
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - if: ${{ github.event.inputs.jobToFail == 'deploy-test' && github.run_attempt == '1' }}
+        run: exit 1
+  deploy-staging:
+    runs-on: self-hosted
+    needs: deploy-test
+    environment:
+      name: env-staging
+      url: https://stg.github.com
+    steps:
+      - name: Run a one-line script
+        run: echo Hello, world!
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - if: ${{ github.event.inputs.jobToFail == 'deploy-staging' && github.run_attempt == '1' }}
+        run: exit 1
+  deploy-production:
+    runs-on: self-hosted
+    needs: deploy-staging
+    environment:
+      name: env-production
+      url: https://github.com
+    steps:
+      - name: Run a one-line script
+        run: echo Hello, world!
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - if: ${{ github.event.inputs.jobToFail == 'deploy-production' && github.run_attempt == '1' }}
+        run: exit 1
