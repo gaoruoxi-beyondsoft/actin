@@ -1,0 +1,26 @@
+name: "Pass + Fail w/ Large Log"
+on:
+  workflow_dispatch:
+    inputs:
+      runAttemptToPass:
+        description: What attempt number should this succeed at
+        type: string
+        default: "2"
+        required: true
+jobs:
+  pass:
+    runs-on: self-hosted
+    steps:
+    - name: pass
+      run: |
+        date
+        for i in {1..84000}; do
+          echo ${i} + "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+        done
+  fail:
+    runs-on: self-hosted
+    steps:
+    - name: fail
+      run: date
+    - if: ${{ github.event.inputs.runAttemptToPass != github.run_attempt }}
+      run: exit 1
