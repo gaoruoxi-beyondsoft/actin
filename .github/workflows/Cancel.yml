@@ -1,0 +1,32 @@
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Cancel the run
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          file=cancel-response.json
+          auth="Authorization: bearer $GITHUB_TOKEN"
+          url="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+          
+          # Delete the output file (if previously created)
+          rm "$file" 1>/dev/null 2>&1 || :
+          
+          # Invoke the REST API
+          code=$(curl --silent --show-error --write-out '%{http_code}' --output "$file" --header "$auth" --request POST "$url")
+          
+          # Dump the response body
+          cat "$file" || :
+          
+          # Check the HTTP code
+          echo "HTTP code $code"
+          if [[ "$code" != '202' ]]; then
+            exit 1
+          fi
+      - name: Wait for cancel
+        run: ping -c 120 127.0.0.1
+      - name: Should never reach here
+        run: exit 1
