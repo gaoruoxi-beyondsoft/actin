@@ -1,0 +1,24 @@
+name: Annotations
+
+on:
+  workflow_dispatch:
+
+jobs:
+  job1-annotation:
+    runs-on: self-hosted
+    steps:
+      - name: Run a one-line script
+        run: |
+          NOW=$(date)
+          echo "::warning file=app.js,line=1,col=5,endColumn=7::Warning Job1 $NOW"
+    
+  job2-annotation:
+    runs-on: self-hosted
+    steps:
+      - name: Run a one-line script
+        run: |
+          NOW=$(date)
+          echo "::error file=app.js,line=1,col=5,endColumn=7::Error Job2 $NOW"
+      - name: Exit 1
+        if: github.run_attempt == '1'
+        run: exit 1
