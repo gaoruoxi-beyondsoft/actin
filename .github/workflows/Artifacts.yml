@@ -35,7 +35,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Download math result for job 2
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: now
           path: ~/downloads/now
